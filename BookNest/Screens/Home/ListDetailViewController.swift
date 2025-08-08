@@ -18,10 +18,26 @@ class ListDetailViewController: UIViewController {
         return tableView
     }()
     
-    let list: BookList
+    private let activityIndicator: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView(style: .large)
+        indicator.translatesAutoresizingMaskIntoConstraints = false
+        indicator.hidesWhenStopped = true
+        return indicator
+    }()
     
-    init(list: BookList) {
-        self.list = list
+    let subject: String
+    var books: [Book] = []
+    var isLoading = false {
+        didSet {
+            if isLoading { activityIndicator.startAnimating() }
+            else { activityIndicator.stopAnimating() }
+        }
+    }
+    var startIndex = 0
+    let maxResults = 20
+    
+    init(title: String) {
+        self.subject = title
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -37,9 +53,10 @@ class ListDetailViewController: UIViewController {
     
     private func setupUI() {
         self.view.backgroundColor = .systemBackground
-        self.title = list.display_name
+        self.title = subject
         
         self.view.addSubview(tableView)
+        self.view.addSubview(activityIndicator)
         tableView.dataSource = self
         tableView.delegate = self
 
@@ -47,14 +64,31 @@ class ListDetailViewController: UIViewController {
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
+    }
+    
+    private func loadBooks() {
+        guard !isLoading else { return }
+        isLoading = true
+        NetworkManager.shared.fetchBooks(subject: subject, startIndex: startIndex, maxResults: maxResults) { newBooks in
+            self.books += newBooks
+            self.startIndex += self.maxResults
+            self.isLoading = false
+            DispatchQueue.main.async {
+                self.tableView.reloadData()
+            }
+        }
     }
 }
 
 extension ListDetailViewController: UITableViewDataSource {
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return list.books.count
+        return books.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -62,101 +96,19 @@ extension ListDetailViewController: UITableViewDataSource {
             return UITableViewCell()
         }
         
-        let book = list.books[indexPath.row]
+        let book = books[indexPath.row]
         cell.configure(with: book)
         return cell
     }
 }
 
 extension ListDetailViewController: UITableViewDelegate {
-    
-}
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let offsetY = scrollView.contentOffset.y
+        let contentHeight = scrollView.contentSize.height
 
-class BookCell: UITableViewCell {
-    
-    static let identifier = "BookCell"
-    
-    private let mainStackView: UIStackView = {
-        let stackView = UIStackView()
-        stackView.axis = .horizontal
-        stackView.spacing = 16
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        return stackView
-    }()
-    
-    private let bookImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFill
-        imageView.clipsToBounds = true
-        imageView.layer.cornerRadius = 4
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        return imageView
-    }()
-    
-    private let textStackView: UIStackView = {
-        let stackView = UIStackView()
-        stackView.axis = .vertical
-        stackView.spacing = 4
-        stackView.alignment = .leading
-        stackView.distribution = .fill
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        return stackView
-    }()
-    
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 16, weight: .semibold)
-        label.textColor = .label
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    private let authorLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 14, weight: .regular)
-        label.textColor = .secondaryLabel
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
-        
-        setupUI()
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    func configure(with book: Book) {
-        titleLabel.text = book.title
-        authorLabel.text = book.author
-        
-        if let url = URL(string: book.book_image) {
-            DispatchQueue.main.async {
-                self.bookImageView.af.setImage(withURL: url)
-            }
+        if offsetY > contentHeight - scrollView.frame.height * 4 {
+            loadBooks()
         }
-    }
-    
-    private func setupUI() {
-        self.contentView.addSubview(mainStackView)
-        
-        mainStackView.addArrangedSubview(bookImageView)
-        mainStackView.addArrangedSubview(textStackView)
-        
-        textStackView.addArrangedSubview(titleLabel)
-        textStackView.addArrangedSubview(authorLabel)
-        
-        NSLayoutConstraint.activate([
-            mainStackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
-            mainStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            mainStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            mainStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
-            
-            bookImageView.widthAnchor.constraint(equalToConstant: 65),
-            bookImageView.heightAnchor.constraint(equalToConstant: 100)
-        ])
     }
 }

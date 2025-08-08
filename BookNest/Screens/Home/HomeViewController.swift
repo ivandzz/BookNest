@@ -49,7 +49,16 @@ class HomeViewController: UIViewController {
         return sv
     }()
     
-    private var bookLists: [BookList] = []
+    private let activityIndicator: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView(style: .large)
+        indicator.translatesAutoresizingMaskIntoConstraints = false
+        indicator.hidesWhenStopped = true
+        return indicator
+    }()
+    
+    private let categories = ["Fiction", "History", "Science", "Romance", "Fantasy", "Business", "Art", "Travel", "Health", "Biography"]
+    
+    private var booksByCategory: [String: [Book]] = [:]
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -64,7 +73,7 @@ class HomeViewController: UIViewController {
         setupScrollView()
         setupTitle()
         setupStackView()
-
+        setupActivityIndicator()
     }
 
     private func setupScrollView() {
@@ -113,9 +122,10 @@ class HomeViewController: UIViewController {
         ])
     }
     
-    private func setupListSection(for list: BookList) {
+    private func setupCategorySection(for category: String) {
+        guard let books = booksByCategory[category], !books.isEmpty else { return }
         let label = UILabel()
-        label.text = list.display_name
+        label.text = category
         label.font = .systemFont(ofSize: 16, weight: .semibold)
         label.textColor = .label
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -125,7 +135,7 @@ class HomeViewController: UIViewController {
         seeAllButton.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
         seeAllButton.setTitleColor(.systemBlue, for: .normal)
         seeAllButton.translatesAutoresizingMaskIntoConstraints = false
-        let index = bookLists.firstIndex(of: list) ?? 0
+        let index = categories.firstIndex(of: category) ?? 0
         seeAllButton.tag = index
         seeAllButton.addTarget(self, action: #selector(seeAllTapped(_:)), for: .touchUpInside)
         
@@ -165,7 +175,7 @@ class HomeViewController: UIViewController {
             horizontalStack.heightAnchor.constraint(equalTo: scrollView.heightAnchor)
         ])
         
-        for book in list.books {
+        for book in books {
             let bookStackView = UIStackView()
             bookStackView.axis = .vertical
             bookStackView.spacing = 4
@@ -181,12 +191,12 @@ class HomeViewController: UIViewController {
             imageView.widthAnchor.constraint(equalToConstant: 130).isActive = true
             imageView.heightAnchor.constraint(equalToConstant: 200).isActive = true
             
-            if let url = URL(string: book.book_image) {
+            if let url = book.volumeInfo.imageLinks?.thumbnailURL {
                 imageView.af.setImage(withURL: url)
             }
             
             let titleLabel = UILabel()
-            titleLabel.text = book.title
+            titleLabel.text = book.volumeInfo.title
             titleLabel.font = .systemFont(ofSize: 14, weight: .semibold)
             titleLabel.textColor = .label
             titleLabel.numberOfLines = 2
@@ -194,7 +204,7 @@ class HomeViewController: UIViewController {
             titleLabel.adjustsFontSizeToFitWidth = true
             
             let authorLabel = UILabel()
-            authorLabel.text = book.author
+            authorLabel.text = book.volumeInfo.authors?.joined(separator: ", ")
             authorLabel.font = .systemFont(ofSize: 12, weight: .regular)
             authorLabel.textColor = .secondaryLabel
             authorLabel.numberOfLines = 2
@@ -209,28 +219,36 @@ class HomeViewController: UIViewController {
         }
     }
     
-    private func fetchData() {
-        guard let apiKey = Bundle.main.object(forInfoDictionaryKey: "API_KEY") as? String else { return }
-        let url = "https://api.nytimes.com/svc/books/v3/lists/overview.json?api-key=\(apiKey)"
+    private func setupActivityIndicator() {
+        self.view.addSubview(activityIndicator)
         
-        AF.request(url)
-            .responseDecodable(of: BooksResponse.self) { [weak self] response in
-                guard let self else { return }
-                switch response.result {
-                case .success(let booksResponse):
-                    self.bookLists = booksResponse.results.lists
-                    for list in bookLists {
-                        setupListSection(for: list)
-                    }
-                case .failure(let error):
-                    print("Error fetching books: \(error.localizedDescription)")
-                }
+        NSLayoutConstraint.activate([
+            activityIndicator.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
+            activityIndicator.centerYAnchor.constraint(equalTo: self.view.centerYAnchor)
+        ])
+    }
+
+    private func fetchData() {
+        activityIndicator.startAnimating()
+        let group = DispatchGroup()
+        
+        for category in categories {
+            group.enter()
+            NetworkManager.shared.fetchBooks(subject: category) { books in
+                self.booksByCategory[category] = books
+                self.setupCategorySection(for: category)
+                group.leave()
             }
+        }
+        
+        group.notify(queue: .main) {
+            self.activityIndicator.stopAnimating()
+        }
     }
     
     @objc private func seeAllTapped(_ sender: UIButton) {
-        guard sender.tag < bookLists.count else { return }
-        let list = bookLists[sender.tag]
-        self.navigationController?.pushViewController(ListDetailViewController(list: list), animated: true)
+        guard sender.tag < categories.count else { return }
+        let list = booksByCategory[categories[sender.tag]] ?? []
+        self.navigationController?.pushViewController(ListDetailViewController(title: categories[sender.tag]), animated: true)
     }
 }
