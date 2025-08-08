@@ -80,9 +80,9 @@ class BookCell: UITableViewCell {
     func configure(with book: Book) {
         titleLabel.text = book.volumeInfo.title
         authorLabel.text = book.volumeInfo.authors?.joined(separator: ", ")
-        categoryLabel.text = book.volumeInfo.categories?.joined(separator: ", ")
+        categoryLabel.text = book.volumeInfo.categories?.joined(separator: "& ")
         
-        if let url = book.volumeInfo.imageLinks?.thumbnailURL {
+        if let url = book.volumeInfo.imageLinks?.imageURL {
             DispatchQueue.main.async {
                 self.bookImageView.af.setImage(withURL: url)
             }

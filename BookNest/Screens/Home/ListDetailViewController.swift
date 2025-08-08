@@ -14,7 +14,6 @@ class ListDetailViewController: UIViewController {
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.register(BookCell.self, forCellReuseIdentifier: "BookCell")
         tableView.separatorStyle = .none
-        tableView.allowsSelection = false
         return tableView
     }()
     
@@ -103,6 +102,7 @@ extension ListDetailViewController: UITableViewDataSource {
 }
 
 extension ListDetailViewController: UITableViewDelegate {
+    
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         let offsetY = scrollView.contentOffset.y
         let contentHeight = scrollView.contentSize.height
@@ -110,5 +110,14 @@ extension ListDetailViewController: UITableViewDelegate {
         if offsetY > contentHeight - scrollView.frame.height * 4 {
             loadBooks()
         }
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+
+        let selectedBook = books[indexPath.row]
+
+        let detailVC = BookDetailViewController(book: selectedBook)
+        self.navigationController?.pushViewController(detailVC, animated: true)
     }
 }

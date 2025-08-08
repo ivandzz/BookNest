@@ -34,7 +34,7 @@ class HomeViewController: UIViewController {
        
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.text = "What are you reading today?"
+        label.text = "Newest books for you. Start reading!"
         label.font = .systemFont(ofSize: 16, weight: .regular)
         label.textColor = .secondaryLabel
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -56,7 +56,18 @@ class HomeViewController: UIViewController {
         return indicator
     }()
     
-    private let categories = ["Fiction", "History", "Science", "Romance", "Fantasy", "Business", "Art", "Travel", "Health", "Biography"]
+    private let categories = [
+        "Popular Fiction",
+        "Popular Science",
+        "Romance",
+        "Fantasy",
+        "Self-Help",
+        "Business & Money",
+        "Health & Wellness",
+        "World History",
+        "Art & Creativity",
+        "Travel & Adventure"
+    ]
     
     private var booksByCategory: [String: [Book]] = [:]
 
@@ -191,7 +202,7 @@ class HomeViewController: UIViewController {
             imageView.widthAnchor.constraint(equalToConstant: 130).isActive = true
             imageView.heightAnchor.constraint(equalToConstant: 200).isActive = true
             
-            if let url = book.volumeInfo.imageLinks?.thumbnailURL {
+            if let url = book.volumeInfo.imageLinks?.imageURL {
                 imageView.af.setImage(withURL: url)
             }
             
@@ -214,6 +225,11 @@ class HomeViewController: UIViewController {
             bookStackView.addArrangedSubview(imageView)
             bookStackView.addArrangedSubview(titleLabel)
             bookStackView.addArrangedSubview(authorLabel)
+            
+            let tapGesture = BookTapGestureRecognizer(target: self, action: #selector(bookTapped(_:)))
+            tapGesture.book = book
+            bookStackView.isUserInteractionEnabled = true
+            bookStackView.addGestureRecognizer(tapGesture)
             
             horizontalStack.addArrangedSubview(bookStackView)
         }
@@ -248,7 +264,15 @@ class HomeViewController: UIViewController {
     
     @objc private func seeAllTapped(_ sender: UIButton) {
         guard sender.tag < categories.count else { return }
-        let list = booksByCategory[categories[sender.tag]] ?? []
         self.navigationController?.pushViewController(ListDetailViewController(title: categories[sender.tag]), animated: true)
     }
+    
+    @objc private func bookTapped(_ sender: BookTapGestureRecognizer) {
+        guard let book = sender.book else { return }
+        self.navigationController?.pushViewController(BookDetailViewController(book: book), animated: true)
+    }
+}
+
+private class BookTapGestureRecognizer: UITapGestureRecognizer {
+    var book: Book?
 }
