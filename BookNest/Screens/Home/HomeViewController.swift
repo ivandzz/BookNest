@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  HomeViewController.swift
 //  BookNest
 //
 //  Created by Іван Джулинський on 08.08.2025.
@@ -9,7 +9,7 @@ import UIKit
 import Alamofire
 import AlamofireImage
 
-class ViewController: UIViewController {
+class HomeViewController: UIViewController {
     
     private let scrollView: UIScrollView = {
         let scrollView = UIScrollView()
@@ -48,6 +48,8 @@ class ViewController: UIViewController {
         sv.translatesAutoresizingMaskIntoConstraints = false
         return sv
     }()
+    
+    private var bookLists: [BookList] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -66,15 +68,15 @@ class ViewController: UIViewController {
     }
 
     private func setupScrollView() {
-        view.addSubview(scrollView)
+        self.view.addSubview(scrollView)
         
         scrollView.addSubview(contentView)
 
         NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            scrollView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),
             
             contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
             contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
@@ -118,20 +120,26 @@ class ViewController: UIViewController {
         label.textColor = .label
         label.translatesAutoresizingMaskIntoConstraints = false
         
-        let container = UIView()
-        container.translatesAutoresizingMaskIntoConstraints = false
-        container.addSubview(label)
-
-        NSLayoutConstraint.activate([
-            label.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 24),
-            label.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-            label.topAnchor.constraint(equalTo: container.topAnchor),
-            label.bottomAnchor.constraint(equalTo: container.bottomAnchor)
-        ])
+        let seeAllButton = UIButton(type: .system)
+        seeAllButton.setTitle("See All", for: .normal)
+        seeAllButton.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
+        seeAllButton.setTitleColor(.systemBlue, for: .normal)
+        seeAllButton.translatesAutoresizingMaskIntoConstraints = false
+        let index = bookLists.firstIndex(of: list) ?? 0
+        seeAllButton.tag = index
+        seeAllButton.addTarget(self, action: #selector(seeAllTapped(_:)), for: .touchUpInside)
         
+        let container = UIStackView()
+        container.axis = .horizontal
+        container.alignment = .fill
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.isLayoutMarginsRelativeArrangement = true
+        container.layoutMargins = UIEdgeInsets(top: 0, left: 24, bottom: 0, right: 24)
+        container.addArrangedSubview(label)
+        container.addArrangedSubview(seeAllButton)
+
         stackView.addArrangedSubview(container)
         stackView.setCustomSpacing(16, after: container)
-        
 
         let scrollView = UIScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -210,12 +218,19 @@ class ViewController: UIViewController {
                 guard let self else { return }
                 switch response.result {
                 case .success(let booksResponse):
-                    for list in booksResponse.results.lists {
+                    self.bookLists = booksResponse.results.lists
+                    for list in bookLists {
                         setupListSection(for: list)
                     }
                 case .failure(let error):
                     print("Error fetching books: \(error.localizedDescription)")
                 }
             }
+    }
+    
+    @objc private func seeAllTapped(_ sender: UIButton) {
+        guard sender.tag < bookLists.count else { return }
+        let list = bookLists[sender.tag]
+        self.navigationController?.pushViewController(ListDetailViewController(list: list), animated: true)
     }
 }

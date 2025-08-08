@@ -15,12 +15,12 @@ struct Results: Decodable {
     let lists: [BookList]
 }
 
-struct BookList: Decodable {
+struct BookList: Decodable, Equatable {
     let display_name: String
     let books: [Book]
 }
 
-struct Book: Decodable {
+struct Book: Decodable, Equatable {
     let author: String
     let book_image: String
     let description: String
