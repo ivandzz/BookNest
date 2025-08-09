@@ -44,6 +44,7 @@ class BookDetailViewController: UIViewController {
         let label = UILabel()
         label.font = .systemFont(ofSize: 18, weight: .regular)
         label.textColor = .secondaryLabel
+        label.adjustsFontSizeToFitWidth = true
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -76,7 +77,21 @@ class BookDetailViewController: UIViewController {
         return label
     }()
     
+    private let saveButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
+        button.tintColor = .systemBlue
+        return button
+    }()
+    
     let book: Book
+    
+    private var isSaved = false {
+        didSet {
+            updateSaveButtonIcon()
+        }
+    }
     
     init(book: Book) {
         self.book = book
@@ -139,10 +154,26 @@ class BookDetailViewController: UIViewController {
     }
     
     private func setupTextInfo() {
-        contentView.addSubview(titleLabel)
+        isSaved = PersistentManager.shared.isBookSaved(id: book.id)
+        
+        let titleStack = UIStackView(arrangedSubviews: [titleLabel, saveButton])
+        titleStack.axis = .horizontal
+        titleStack.spacing = 8
+        titleStack.alignment = .center
+        titleStack.distribution = .equalCentering
+        titleStack.translatesAutoresizingMaskIntoConstraints = false
+        
+        contentView.addSubview(titleStack)
+        
+        NSLayoutConstraint.activate([
+            titleStack.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 16),
+            titleStack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            titleStack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+        ])
+        
         titleLabel.text = book.volumeInfo.title
 
-        var lastView: UIView = titleLabel
+        var lastView: UIView = titleStack
 
         if let subtitle = book.volumeInfo.subtitle {
             subtitleLabel.text = subtitle
@@ -199,11 +230,21 @@ class BookDetailViewController: UIViewController {
 
             lastView = descriptionLabel
         }
-
-        NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 16),
-            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-        ])
+    }
+    
+    private func updateSaveButtonIcon() {
+        let imageName = isSaved ? "bookmark.fill" : "bookmark"
+        let image = UIImage(systemName: imageName)
+        saveButton.setImage(image, for: .normal)
+    }
+    
+    @objc private func saveButtonTapped() {
+        if isSaved {
+            PersistentManager.shared.deleteBook(by: book.id)
+            isSaved = false
+        } else {
+            PersistentManager.shared.saveBook(book)
+            isSaved = true
+        }
     }
 }
