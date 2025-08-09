@@ -23,7 +23,7 @@ class TabBarViewController: UITabBarController {
         homeVC.delegate = self
         homeVC.tabBarItem = UITabBarItem(title: "Home", image: UIImage(systemName: "house"), tag: 0)
         
-        let profileVC = UINavigationController(rootViewController: UIViewController())
+        let profileVC = UINavigationController(rootViewController: ProfileViewController())
         profileVC.delegate = self
         profileVC.tabBarItem = UITabBarItem(title: "Profile", image: UIImage(systemName: "person"), tag: 1)
         

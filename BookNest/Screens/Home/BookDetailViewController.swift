@@ -44,6 +44,7 @@ class BookDetailViewController: UIViewController {
         let label = UILabel()
         label.font = .systemFont(ofSize: 18, weight: .regular)
         label.textColor = .secondaryLabel
+        label.numberOfLines = 2
         label.adjustsFontSizeToFitWidth = true
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -95,6 +96,15 @@ class BookDetailViewController: UIViewController {
     
     init(book: Book) {
         self.book = book
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    init(book: SavedBook?) {
+        guard let book else {
+            fatalError("SavedBook cannot be nil")
+        }
+            
+        self.book = book.toBook()
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -162,6 +172,11 @@ class BookDetailViewController: UIViewController {
         titleStack.alignment = .center
         titleStack.distribution = .equalCentering
         titleStack.translatesAutoresizingMaskIntoConstraints = false
+        
+        saveButton.setContentHuggingPriority(.defaultHigh + 1, for: .horizontal)
+        saveButton.setContentCompressionResistancePriority(.defaultHigh + 1, for: .horizontal)
+        titleLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         
         contentView.addSubview(titleStack)
         

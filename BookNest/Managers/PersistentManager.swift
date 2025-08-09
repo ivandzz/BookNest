@@ -41,17 +41,6 @@ final class PersistentManager {
         }
     }
     
-    func getAllBooks() -> [Book] {
-        do {
-            let realm = try Realm()
-            let savedBooks = realm.objects(SavedBook.self)
-            return savedBooks.map { $0.toBook() }
-        } catch {
-            print("Error fetching books: \(error.localizedDescription)")
-            return []
-        }
-    }
-    
     func isBookSaved(id: String) -> Bool {
         do {
             let realm = try Realm()

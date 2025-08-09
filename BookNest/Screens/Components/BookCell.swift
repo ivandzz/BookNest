@@ -8,6 +8,7 @@ class BookCell: UITableViewCell {
     private let mainStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .horizontal
+        stackView.alignment = .leading
         stackView.spacing = 16
         stackView.translatesAutoresizingMaskIntoConstraints = false
         return stackView
@@ -89,6 +90,20 @@ class BookCell: UITableViewCell {
         }
     }
     
+    func configure(with book: SavedBook?) {
+        guard let book else { return }
+        
+        titleLabel.text = book.title
+        authorLabel.text = book.authors.joined(separator: ", ")
+        categoryLabel.text = book.categories.joined(separator: "& ")
+        
+        if let imageURLString = book.imageURL, let url = URL(string: imageURLString) {
+            DispatchQueue.main.async {
+                self.bookImageView.af.setImage(withURL: url)
+            }
+        }
+    }
+    
     private func setupUI() {
         self.contentView.addSubview(mainStackView)
         
@@ -101,8 +116,8 @@ class BookCell: UITableViewCell {
         
         NSLayoutConstraint.activate([
             mainStackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
-            mainStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            mainStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            mainStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 24),
+            mainStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -24),
             mainStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
             
             bookImageView.widthAnchor.constraint(equalToConstant: 65),

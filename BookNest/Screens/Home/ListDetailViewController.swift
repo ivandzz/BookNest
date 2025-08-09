@@ -12,7 +12,7 @@ class ListDetailViewController: UIViewController {
     private let tableView: UITableView = {
         let tableView = UITableView()
         tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.register(BookCell.self, forCellReuseIdentifier: "BookCell")
+        tableView.register(BookCell.self, forCellReuseIdentifier: BookCell.identifier)
         tableView.separatorStyle = .none
         return tableView
     }()
