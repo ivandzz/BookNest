@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SnapKit
 import RealmSwift
 
 class ProfileViewController: UIViewController {
@@ -15,7 +16,6 @@ class ProfileViewController: UIViewController {
         label.font = .systemFont(ofSize: 28, weight: .semibold)
         label.textColor = .label
         label.text = "Your Profile"
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
@@ -24,7 +24,6 @@ class ProfileViewController: UIViewController {
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
         imageView.image = UIImage(systemName: "person.circle.fill")
-        imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
     
@@ -33,13 +32,11 @@ class ProfileViewController: UIViewController {
         label.font = .systemFont(ofSize: 20, weight: .bold)
         label.textColor = .label
         label.text = "Saved Books"
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
     private let savedBooksTableView: UITableView = {
         let tableView = UITableView()
-        tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.register(BookCell.self, forCellReuseIdentifier: BookCell.identifier)
         tableView.separatorStyle = .none
         return tableView
@@ -52,7 +49,6 @@ class ProfileViewController: UIViewController {
         label.font = .systemFont(ofSize: 18, weight: .medium)
         label.textAlignment = .center
         label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
         label.isHidden = true
         return label
     }()
@@ -93,23 +89,23 @@ class ProfileViewController: UIViewController {
         
         self.view.addSubview(titleStack)
         
-        NSLayoutConstraint.activate([
-            titleStack.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor, constant: 13),
-            titleStack.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 24),
-            titleStack.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -24),
-            profileImageView.widthAnchor.constraint(equalToConstant: 40),
-            profileImageView.heightAnchor.constraint(equalToConstant: 40)
-        ])
+        titleStack.snp.makeConstraints { make in
+            make.top.equalTo(self.view.safeAreaLayoutGuide.snp.top).offset(13)
+            make.leading.trailing.equalToSuperview().inset(24)
+        }
+        
+        profileImageView.snp.makeConstraints { make in
+            make.width.height.equalTo(40)
+        }
     }
     
     private func setupSavedBooksLabel() {
         self.view.addSubview(savedBookTitleLabel)
         
-        NSLayoutConstraint.activate([
-            savedBookTitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 20),
-            savedBookTitleLabel.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 24),
-            savedBookTitleLabel.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -24)
-        ])
+        savedBookTitleLabel.snp.makeConstraints { make in
+            make.top.equalTo(titleLabel.snp.bottom).offset(20)
+            make.leading.trailing.equalToSuperview().inset(24)
+        }
     }
     
     private func setupSavedBooksTableView() {
@@ -118,23 +114,20 @@ class ProfileViewController: UIViewController {
         savedBooksTableView.dataSource = self
         savedBooksTableView.delegate = self
         
-        NSLayoutConstraint.activate([
-            savedBooksTableView.topAnchor.constraint(equalTo: savedBookTitleLabel.bottomAnchor, constant: 20),
-            savedBooksTableView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
-            savedBooksTableView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
-            savedBooksTableView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor)
-        ])
+        savedBooksTableView.snp.makeConstraints { make in
+            make.top.equalTo(savedBookTitleLabel.snp.bottom).offset(10)
+            make.leading.trailing.equalToSuperview()
+            make.bottom.equalToSuperview()
+        }
     }
     
     private func setupEmptyState() {
         self.view.addSubview(emptyStateLabel)
-
-        NSLayoutConstraint.activate([
-            emptyStateLabel.centerXAnchor.constraint(equalTo: savedBooksTableView.centerXAnchor),
-            emptyStateLabel.centerYAnchor.constraint(equalTo: savedBooksTableView.centerYAnchor),
-            emptyStateLabel.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 24),
-            emptyStateLabel.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -24)
-        ])
+        
+        emptyStateLabel.snp.makeConstraints { make in
+            make.center.equalTo(savedBooksTableView)
+            make.leading.trailing.equalToSuperview().inset(24)
+        }
     }
     
     private func fetchSavedBooks() {
