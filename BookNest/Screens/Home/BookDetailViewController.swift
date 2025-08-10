@@ -6,25 +6,17 @@
 //
 
 import UIKit
+import SnapKit
 
 class BookDetailViewController: UIViewController {
     
-    private let scrollView: UIScrollView = {
-        let scrollView = UIScrollView()
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        return scrollView
-    }()
+    private let scrollView = UIScrollView()
     
-    private let contentView: UIView = {
-        let view = UIView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
+    private let contentView = UIView()
     
     private let imageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
-        imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = 8
         return imageView
@@ -36,7 +28,6 @@ class BookDetailViewController: UIViewController {
         label.textColor = .label
         label.numberOfLines = 2
         label.adjustsFontSizeToFitWidth = true
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
@@ -46,7 +37,6 @@ class BookDetailViewController: UIViewController {
         label.textColor = .secondaryLabel
         label.numberOfLines = 2
         label.adjustsFontSizeToFitWidth = true
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
@@ -56,7 +46,6 @@ class BookDetailViewController: UIViewController {
         label.textColor = .secondaryLabel
         label.numberOfLines = 1
         label.adjustsFontSizeToFitWidth = true
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
@@ -65,7 +54,6 @@ class BookDetailViewController: UIViewController {
         label.font = .systemFont(ofSize: 14, weight: .regular)
         label.textColor = .secondaryLabel
         label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
@@ -74,13 +62,11 @@ class BookDetailViewController: UIViewController {
         label.font = .systemFont(ofSize: 16, weight: .regular)
         label.textColor = .label
         label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
     private let saveButton: UIButton = {
         let button = UIButton(type: .system)
-        button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
         button.tintColor = .systemBlue
         return button
@@ -131,20 +117,15 @@ class BookDetailViewController: UIViewController {
         self.view.addSubview(scrollView)
         
         scrollView.addSubview(contentView)
-
-        NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor),
-            scrollView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),
-            
-            contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
-            contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
-            contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
-            contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
-
-            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor)
-        ])
+        
+        scrollView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        
+        contentView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+            make.width.equalToSuperview()
+        }
     }
         
     private func setupImageView() {
@@ -154,13 +135,11 @@ class BookDetailViewController: UIViewController {
             imageView.af.setImage(withURL: url)
         }
         
-        NSLayoutConstraint.activate([
-            imageView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 16),
-            imageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            imageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            imageView.widthAnchor.constraint(equalTo: self.view.widthAnchor, constant: -32),
-            imageView.heightAnchor.constraint(equalTo: imageView.widthAnchor, multiplier: 1.54)
-        ])
+        imageView.snp.makeConstraints { make in
+            make.top.equalTo(contentView.safeAreaLayoutGuide).offset(16)
+            make.leading.trailing.equalToSuperview().inset(16)
+            make.height.equalTo(imageView.snp.width).multipliedBy(1.54)
+        }
     }
     
     private func setupTextInfo() {
@@ -171,7 +150,6 @@ class BookDetailViewController: UIViewController {
         titleStack.spacing = 8
         titleStack.alignment = .center
         titleStack.distribution = .equalCentering
-        titleStack.translatesAutoresizingMaskIntoConstraints = false
         
         saveButton.setContentHuggingPriority(.defaultHigh + 1, for: .horizontal)
         saveButton.setContentCompressionResistancePriority(.defaultHigh + 1, for: .horizontal)
@@ -180,11 +158,10 @@ class BookDetailViewController: UIViewController {
         
         contentView.addSubview(titleStack)
         
-        NSLayoutConstraint.activate([
-            titleStack.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 16),
-            titleStack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            titleStack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-        ])
+        titleStack.snp.makeConstraints { make in
+            make.top.equalTo(imageView.snp.bottom).offset(16)
+            make.leading.trailing.equalToSuperview().inset(16)
+        }
         
         titleLabel.text = book.volumeInfo.title
 
@@ -193,12 +170,11 @@ class BookDetailViewController: UIViewController {
         if let subtitle = book.volumeInfo.subtitle {
             subtitleLabel.text = subtitle
             contentView.addSubview(subtitleLabel)
-
-            NSLayoutConstraint.activate([
-                subtitleLabel.topAnchor.constraint(equalTo: lastView.bottomAnchor, constant: 4),
-                subtitleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-                subtitleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            ])
+            
+            subtitleLabel.snp.makeConstraints { make in
+                make.top.equalTo(lastView.snp.bottom).offset(4)
+                make.leading.trailing.equalToSuperview().inset(16)
+            }
 
             lastView = subtitleLabel
         }
@@ -208,12 +184,11 @@ class BookDetailViewController: UIViewController {
             let year = String(publishedDate.prefix(4))
             infoLabel.text = "\(categories) \(year)"
             contentView.addSubview(infoLabel)
-
-            NSLayoutConstraint.activate([
-                infoLabel.topAnchor.constraint(equalTo: lastView.bottomAnchor, constant: 4),
-                infoLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-                infoLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            ])
+            
+            infoLabel.snp.makeConstraints { make in
+                make.top.equalTo(lastView.snp.bottom).offset(4)
+                make.leading.trailing.equalToSuperview().inset(16)
+            }
 
             lastView = infoLabel
         }
@@ -221,12 +196,11 @@ class BookDetailViewController: UIViewController {
         if let authors = book.volumeInfo.authors, !authors.isEmpty {
             authorLabel.text = "by \(authors.joined(separator: ", "))"
             contentView.addSubview(authorLabel)
-
-            NSLayoutConstraint.activate([
-                authorLabel.topAnchor.constraint(equalTo: lastView.bottomAnchor, constant: 4),
-                authorLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-                authorLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            ])
+            
+            authorLabel.snp.makeConstraints { make in
+                make.top.equalTo(lastView.snp.bottom).offset(4)
+                make.leading.trailing.equalToSuperview().inset(16)
+            }
 
             lastView = authorLabel
         }
@@ -235,13 +209,12 @@ class BookDetailViewController: UIViewController {
             descriptionLabel.text = description
             descriptionLabel.numberOfLines = 0
             contentView.addSubview(descriptionLabel)
-
-            NSLayoutConstraint.activate([
-                descriptionLabel.topAnchor.constraint(equalTo: lastView.bottomAnchor, constant: 8),
-                descriptionLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-                descriptionLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-                descriptionLabel.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -16)
-            ])
+            
+            descriptionLabel.snp.makeConstraints { make in
+                make.top.equalTo(lastView.snp.bottom).offset(8)
+                make.leading.trailing.equalToSuperview().inset(16)
+                make.bottom.lessThanOrEqualTo(contentView.safeAreaLayoutGuide).offset(-16)
+            }
 
             lastView = descriptionLabel
         }
