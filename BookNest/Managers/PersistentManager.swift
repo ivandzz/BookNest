@@ -50,4 +50,28 @@ final class PersistentManager {
             return false
         }
     }
+    
+    func updatePagesRead(for id: String, pagesRead: Int) {
+        do {
+            let realm = try Realm()
+            
+            if let savedBook = realm.object(ofType: SavedBook.self, forPrimaryKey: id) {
+                try realm.write {
+                    savedBook.pagesRead = pagesRead
+                }
+            }
+        } catch {
+            print("Error updating pages read: \(error.localizedDescription)")
+        }
+    }
+    
+    func getSavedBook(by id: String) -> SavedBook? {
+        do {
+            let realm = try Realm()
+            return realm.object(ofType: SavedBook.self, forPrimaryKey: id)
+        } catch {
+            print("Error fetching saved book: \(error.localizedDescription)")
+            return nil
+        }
+    }
 }

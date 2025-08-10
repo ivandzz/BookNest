@@ -85,7 +85,6 @@ class ProfileViewController: UIViewController {
         titleStack.axis = .horizontal
         titleStack.distribution = .equalSpacing
         titleStack.alignment = .center
-        titleStack.translatesAutoresizingMaskIntoConstraints = false
         
         self.view.addSubview(titleStack)
         
@@ -131,29 +130,33 @@ class ProfileViewController: UIViewController {
     }
     
     private func fetchSavedBooks() {
-        let realm = try! Realm()
-        savedBooks = realm.objects(SavedBook.self)
-        emptyStateLabel.isHidden = !(savedBooks?.isEmpty ?? true)
-        
-        notificationToken = savedBooks?.observe { [weak self] changes in
-            guard let self else { return }
+        do {
+            let realm = try Realm()
+            savedBooks = realm.objects(SavedBook.self)
+            emptyStateLabel.isHidden = !(savedBooks?.isEmpty ?? true)
             
-            DispatchQueue.main.async {
-                guard self.isViewLoaded && self.view.window != nil else { return }
+            notificationToken = savedBooks?.observe { [weak self] changes in
+                guard let self else { return }
                 
-                switch changes {
-                case .initial:
-                    self.savedBooksTableView.reloadData()
-                case .update(_, let deletions, let insertions, let modifications):
-                    self.savedBooksTableView.performBatchUpdates {
-                        self.savedBooksTableView.deleteRows(at: deletions.map { IndexPath(row: $0, section: 0) }, with: .automatic)
-                        self.savedBooksTableView.insertRows(at: insertions.map { IndexPath(row: $0, section: 0) }, with: .automatic)
-                        self.savedBooksTableView.reloadRows(at: modifications.map { IndexPath(row: $0, section: 0) }, with: .automatic)
+                DispatchQueue.main.async {
+                    guard self.isViewLoaded && self.view.window != nil else { return }
+                    
+                    switch changes {
+                    case .initial:
+                        self.savedBooksTableView.reloadData()
+                    case .update(_, let deletions, let insertions, let modifications):
+                        self.savedBooksTableView.performBatchUpdates {
+                            self.savedBooksTableView.deleteRows(at: deletions.map { IndexPath(row: $0, section: 0) }, with: .automatic)
+                            self.savedBooksTableView.insertRows(at: insertions.map { IndexPath(row: $0, section: 0) }, with: .automatic)
+                            self.savedBooksTableView.reloadRows(at: modifications.map { IndexPath(row: $0, section: 0) }, with: .automatic)
+                        }
+                    case .error(let error):
+                        print("Realm notification error: \(error)")
                     }
-                case .error(let error):
-                    print("Realm notification error: \(error)")
                 }
             }
+        } catch {
+            print("Error fetching saved books: \(error)")
         }
     }
     

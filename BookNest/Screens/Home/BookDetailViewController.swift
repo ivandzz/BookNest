@@ -72,6 +72,30 @@ class BookDetailViewController: UIViewController {
         return button
     }()
     
+    private lazy var pagesReadTextField: UITextField = {
+        let tf = UITextField()
+        tf.placeholder = "Pages Read"
+        tf.keyboardType = .numberPad
+        tf.borderStyle = .roundedRect
+        tf.addTarget(self, action: #selector(pagesReadChanged), for: .editingChanged)
+        return tf
+    }()
+
+    private let totalPagesLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 14)
+        label.textColor = .secondaryLabel
+        return label
+    }()
+
+    private lazy var pagesStackView: UIStackView = {
+        let sv = UIStackView()
+        sv.axis = .horizontal
+        sv.spacing = 8
+        sv.alignment = .center
+        return sv
+    }()
+    
     let book: Book
     
     private var isSaved = false {
@@ -102,6 +126,12 @@ class BookDetailViewController: UIViewController {
         super.viewDidLoad()
 
         setupUI()
+        
+        if isSaved {
+            loadPagesRead()
+        }
+        
+        setupKeyboardObservers()
     }
     
     private func setupUI() {
@@ -111,6 +141,7 @@ class BookDetailViewController: UIViewController {
         setupScrollView()
         setupImageView()
         setupTextInfo()
+        setupKeyboardToolbar()
     }
     
     private func setupScrollView() {
@@ -204,6 +235,30 @@ class BookDetailViewController: UIViewController {
 
             lastView = authorLabel
         }
+        
+        if let totalPages = book.volumeInfo.pageCount {
+            if isSaved {
+                totalPagesLabel.text = "/ \(totalPages)"
+            } else {
+                totalPagesLabel.text = "\(totalPages) pages"
+            }
+            
+            pagesStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+            
+            if isSaved {
+                pagesStackView.addArrangedSubview(pagesReadTextField)
+            }
+            
+            pagesStackView.addArrangedSubview(totalPagesLabel)
+            contentView.addSubview(pagesStackView)
+            
+            pagesStackView.snp.makeConstraints { make in
+                make.top.equalTo(lastView.snp.bottom).offset(4)
+                make.leading.trailing.equalToSuperview().inset(16)
+            }
+            
+            lastView = pagesStackView
+        }
 
         if let description = book.volumeInfo.description {
             descriptionLabel.text = description
@@ -226,6 +281,34 @@ class BookDetailViewController: UIViewController {
         saveButton.setImage(image, for: .normal)
     }
     
+    private func setupKeyboardToolbar() {
+        let toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 44))
+        
+        let flexSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        let doneButton = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(doneButtonTapped))
+        
+        toolbar.items = [flexSpace, doneButton]
+        toolbar.sizeToFit()
+        
+        pagesReadTextField.inputAccessoryView = toolbar
+    }
+    
+    private func setupKeyboardObservers() {
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow),
+                                               name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide),
+                                               name: UIResponder.keyboardWillHideNotification, object: nil)
+    }
+
+    private func loadPagesRead() {
+        guard let savedBook = PersistentManager.shared.getSavedBook(by: book.id) else { return }
+        pagesReadTextField.text = "\(savedBook.pagesRead)"
+    }
+
+    @objc private func doneButtonTapped() {
+        self.view.endEditing(true)
+    }
+    
     @objc private func saveButtonTapped() {
         if isSaved {
             PersistentManager.shared.deleteBook(by: book.id)
@@ -234,5 +317,32 @@ class BookDetailViewController: UIViewController {
             PersistentManager.shared.saveBook(book)
             isSaved = true
         }
+        
+        contentView.subviews.forEach { $0.removeFromSuperview() }
+        setupImageView()
+        setupTextInfo()
+        
+        if isSaved {
+            loadPagesRead()
+        }
+    }
+    
+    @objc private func pagesReadChanged() {
+        guard let text = pagesReadTextField.text,
+              let value = Int(text) else { return }
+        
+        PersistentManager.shared.updatePagesRead(for: book.id, pagesRead: value)
+    }
+    
+    @objc private func keyboardWillShow(notification: NSNotification) {
+        guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
+        let keyboardHeight = keyboardFrame.height
+        scrollView.contentInset.bottom = keyboardHeight
+        scrollView.verticalScrollIndicatorInsets.bottom = keyboardHeight
+    }
+
+    @objc private func keyboardWillHide(notification: NSNotification) {
+        scrollView.contentInset.bottom = 0
+        scrollView.verticalScrollIndicatorInsets.bottom = 0
     }
 }

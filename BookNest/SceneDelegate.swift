@@ -18,6 +18,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window.rootViewController = TabBarViewController()
         self.window = window
         window.makeKeyAndVisible()
+        UIApplication.shared.addTapGestureRecognizer()
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {

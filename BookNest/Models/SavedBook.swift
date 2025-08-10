@@ -19,6 +19,7 @@ class SavedBook: Object {
     @Persisted var pageCount: Int = 0
     @Persisted var categories: List<String>
     @Persisted var imageURL: String?
+    @Persisted var pagesRead: Int = 0
     
     convenience init(from book: Book) {
         self.init()
