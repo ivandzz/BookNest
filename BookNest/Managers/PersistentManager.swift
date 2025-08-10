@@ -58,6 +58,8 @@ final class PersistentManager {
             if let savedBook = realm.object(ofType: SavedBook.self, forPrimaryKey: id) {
                 try realm.write {
                     savedBook.pagesRead = pagesRead
+                    
+                    updateStreak(realm: realm)
                 }
             }
         } catch {
@@ -72,6 +74,81 @@ final class PersistentManager {
         } catch {
             print("Error fetching saved book: \(error.localizedDescription)")
             return nil
+        }
+    }
+    
+    private func updateStreak(realm: Realm) {
+        let today = Calendar.current.startOfDay(for: Date())
+        
+        let stats = realm.object(ofType: ReadingStats.self, forPrimaryKey: "global") ?? ReadingStats()
+        
+        if let lastRead = stats.lastReadDate {
+            let lastDay = Calendar.current.startOfDay(for: lastRead)
+            let diff = Calendar.current.dateComponents([.day], from: lastDay, to: today).day ?? 0
+            
+            switch diff {
+            case 0:
+                break
+            case 1:
+                stats.currentStreak += 1
+            default:
+                stats.currentStreak = 0
+            }
+        } else {
+            stats.currentStreak = 1
+        }
+        
+        stats.lastReadDate = today
+        stats.maxStreak = max(stats.maxStreak, stats.currentStreak)
+        
+        realm.add(stats, update: .modified)
+    }
+    
+    func getReadingStats() -> ReadingStats? {
+        do {
+            let realm = try Realm()
+            return realm.object(ofType: ReadingStats.self, forPrimaryKey: "global")
+        } catch {
+            print("Error fetching reading stats: \(error.localizedDescription)")
+            return nil
+        }
+    }
+    
+    func resetStreakIfNeeded() {
+        do {
+            let realm = try Realm()
+            let today = Calendar.current.startOfDay(for: Date())
+            
+            guard let stats = realm.object(ofType: ReadingStats.self, forPrimaryKey: "global") else {
+                let newStats = ReadingStats()
+                newStats.id = "global"
+                newStats.currentStreak = 0
+                newStats.maxStreak = 0
+                newStats.lastReadDate = nil
+                
+                try realm.write {
+                    realm.add(newStats)
+                }
+                return
+            }
+            
+            if let lastRead = stats.lastReadDate {
+                let lastDay = Calendar.current.startOfDay(for: lastRead)
+                let diff = Calendar.current.dateComponents([.day], from: lastDay, to: today).day ?? 0
+                
+                if diff > 1 && stats.currentStreak != 0 {
+                    try realm.write {
+                        stats.currentStreak = 0
+                    }
+                }
+            } else {
+                try realm.write {
+                    stats.currentStreak = 0
+                }
+            }
+            
+        } catch {
+            print("Error resetting streak if needed: \(error.localizedDescription)")
         }
     }
 }

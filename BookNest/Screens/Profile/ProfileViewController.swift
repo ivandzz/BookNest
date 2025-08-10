@@ -27,6 +27,14 @@ class ProfileViewController: UIViewController {
         return imageView
     }()
     
+    private let streakLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 16, weight: .regular)
+        label.textColor = .secondaryLabel
+        label.text = "Current Reading Streak: 0 days 🔥"
+        return label
+    }()
+    
     private let savedBookTitleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 20, weight: .bold)
@@ -62,6 +70,7 @@ class ProfileViewController: UIViewController {
 
         setupUI()
         fetchSavedBooks()
+        fetchStreak()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -69,12 +78,14 @@ class ProfileViewController: UIViewController {
         
         fetchSavedBooks()
         savedBooksTableView.reloadData()
+        fetchStreak()
     }
     
     private func setupUI() {
         self.view.backgroundColor = .systemBackground
         
         setupTitleStack()
+        setupStreakLabel()
         setupSavedBooksLabel()
         setupSavedBooksTableView()
         setupEmptyState()
@@ -98,11 +109,20 @@ class ProfileViewController: UIViewController {
         }
     }
     
+    private func setupStreakLabel() {
+        self.view.addSubview(streakLabel)
+        
+        streakLabel.snp.makeConstraints { make in
+            make.top.equalTo(titleLabel.snp.bottom).offset(8)
+            make.leading.trailing.equalToSuperview().inset(24)
+        }
+    }
+    
     private func setupSavedBooksLabel() {
         self.view.addSubview(savedBookTitleLabel)
         
         savedBookTitleLabel.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(20)
+            make.top.equalTo(streakLabel.snp.bottom).offset(20)
             make.leading.trailing.equalToSuperview().inset(24)
         }
     }
@@ -127,6 +147,12 @@ class ProfileViewController: UIViewController {
             make.center.equalTo(savedBooksTableView)
             make.leading.trailing.equalToSuperview().inset(24)
         }
+    }
+    
+    private func fetchStreak() {
+        guard let stats = PersistentManager.shared.getReadingStats() else { return }
+        
+        streakLabel.text = "Current Reading Streak: \(stats.currentStreak) days 🔥"
     }
     
     private func fetchSavedBooks() {
