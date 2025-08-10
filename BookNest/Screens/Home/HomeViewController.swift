@@ -8,27 +8,19 @@
 import UIKit
 import Alamofire
 import AlamofireImage
+import SnapKit
 
 class HomeViewController: UIViewController {
     
-    private let scrollView: UIScrollView = {
-        let scrollView = UIScrollView()
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        return scrollView
-    }()
+    private let scrollView = UIScrollView()
     
-    private let contentView: UIView = {
-        let view = UIView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
+    private let contentView = UIView()
     
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "Welcome to BookNest!"
         label.font = .systemFont(ofSize: 28, weight: .semibold)
         label.textColor = .label
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
        
@@ -37,7 +29,6 @@ class HomeViewController: UIViewController {
         label.text = "Newest books for you. Start reading!"
         label.font = .systemFont(ofSize: 16, weight: .regular)
         label.textColor = .secondaryLabel
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
@@ -45,13 +36,11 @@ class HomeViewController: UIViewController {
         let sv = UIStackView()
         sv.axis = .vertical
         sv.spacing = 40
-        sv.translatesAutoresizingMaskIntoConstraints = false
         return sv
     }()
     
     private let activityIndicator: UIActivityIndicatorView = {
         let indicator = UIActivityIndicatorView(style: .large)
-        indicator.translatesAutoresizingMaskIntoConstraints = false
         indicator.hidesWhenStopped = true
         return indicator
     }()
@@ -91,46 +80,40 @@ class HomeViewController: UIViewController {
         self.view.addSubview(scrollView)
         
         scrollView.addSubview(contentView)
-
-        NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor),
-            scrollView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),
-            
-            contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
-            contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
-            contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
-            contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
-
-            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor)
-        ])
+        
+        scrollView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        
+        contentView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+            make.width.equalToSuperview()
+        }
     }
     
     private func setupTitle() {
         contentView.addSubview(titleLabel)
         contentView.addSubview(subtitleLabel)
         
-        NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 13),
-            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 24),
-            titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -24),
-            
-            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
-            subtitleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 24),
-            subtitleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -24)
-        ])
+        titleLabel.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(13)
+            make.leading.trailing.equalToSuperview().inset(24)
+        }
+        
+        subtitleLabel.snp.makeConstraints { make in
+            make.top.equalTo(titleLabel.snp.bottom).offset(4)
+            make.leading.trailing.equalToSuperview().inset(24)
+        }
     }
     
     private func setupStackView() {
         contentView.addSubview(stackView)
         
-        NSLayoutConstraint.activate([
-            stackView.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 25),
-            stackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            stackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20)
-        ])
+        stackView.snp.makeConstraints { make in
+            make.top.equalTo(subtitleLabel.snp.bottom).offset(25)
+            make.leading.trailing.equalToSuperview()
+            make.bottom.equalToSuperview().inset(20)
+        }
     }
     
     private func setupCategorySection(for category: String) {
@@ -139,13 +122,11 @@ class HomeViewController: UIViewController {
         label.text = category
         label.font = .systemFont(ofSize: 16, weight: .semibold)
         label.textColor = .label
-        label.translatesAutoresizingMaskIntoConstraints = false
         
         let seeAllButton = UIButton(type: .system)
         seeAllButton.setTitle("See All", for: .normal)
         seeAllButton.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
         seeAllButton.setTitleColor(.systemBlue, for: .normal)
-        seeAllButton.translatesAutoresizingMaskIntoConstraints = false
         let index = categories.firstIndex(of: category) ?? 0
         seeAllButton.tag = index
         seeAllButton.addTarget(self, action: #selector(seeAllTapped(_:)), for: .touchUpInside)
@@ -153,7 +134,6 @@ class HomeViewController: UIViewController {
         let container = UIStackView()
         container.axis = .horizontal
         container.alignment = .fill
-        container.translatesAutoresizingMaskIntoConstraints = false
         container.isLayoutMarginsRelativeArrangement = true
         container.layoutMargins = UIEdgeInsets(top: 0, left: 24, bottom: 0, right: 24)
         container.addArrangedSubview(label)
@@ -163,7 +143,6 @@ class HomeViewController: UIViewController {
         stackView.setCustomSpacing(16, after: container)
 
         let scrollView = UIScrollView()
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.showsHorizontalScrollIndicator = false
         scrollView.alwaysBounceHorizontal = true
         stackView.addArrangedSubview(scrollView)
@@ -172,35 +151,35 @@ class HomeViewController: UIViewController {
         horizontalStack.axis = .horizontal
         horizontalStack.spacing = 16
         horizontalStack.alignment = .leading
-        horizontalStack.translatesAutoresizingMaskIntoConstraints = false
         horizontalStack.isLayoutMarginsRelativeArrangement = true
         horizontalStack.layoutMargins = UIEdgeInsets(top: 0, left: 24, bottom: 0, right: 24)
         
         scrollView.addSubview(horizontalStack)
         
-        NSLayoutConstraint.activate([
-            horizontalStack.topAnchor.constraint(equalTo: scrollView.topAnchor),
-            horizontalStack.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
-            horizontalStack.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
-            horizontalStack.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
-            horizontalStack.heightAnchor.constraint(equalTo: scrollView.heightAnchor)
-        ])
+        horizontalStack.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+            make.height.equalToSuperview()
+        }
         
         for book in books {
             let bookStackView = UIStackView()
             bookStackView.axis = .vertical
             bookStackView.spacing = 4
             bookStackView.alignment = .leading
-            bookStackView.translatesAutoresizingMaskIntoConstraints = false
-            bookStackView.widthAnchor.constraint(equalToConstant: 130).isActive = true
+            
+            bookStackView.snp.makeConstraints { make in
+                make.width.equalTo(130)
+            }
             
             let imageView = UIImageView()
             imageView.contentMode = .scaleAspectFill
             imageView.clipsToBounds = true
-            imageView.translatesAutoresizingMaskIntoConstraints = false
             imageView.layer.cornerRadius = 8
-            imageView.widthAnchor.constraint(equalToConstant: 130).isActive = true
-            imageView.heightAnchor.constraint(equalToConstant: 200).isActive = true
+            
+            imageView.snp.makeConstraints { make in
+                make.width.equalTo(130)
+                make.height.equalTo(200)
+            }
             
             if let url = book.volumeInfo.imageLinks?.imageURL {
                 imageView.af.setImage(withURL: url)
@@ -238,10 +217,9 @@ class HomeViewController: UIViewController {
     private func setupActivityIndicator() {
         self.view.addSubview(activityIndicator)
         
-        NSLayoutConstraint.activate([
-            activityIndicator.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
-            activityIndicator.centerYAnchor.constraint(equalTo: self.view.centerYAnchor)
-        ])
+        activityIndicator.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+        }
     }
 
     private func fetchData() {
