@@ -6,12 +6,13 @@
 //
 
 import UIKit
+import SnapKit
 
 class ListDetailViewController: UIViewController {
 
     private let tableView: UITableView = {
         let tableView = UITableView()
-        tableView.translatesAutoresizingMaskIntoConstraints = false
+//        tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.register(BookCell.self, forCellReuseIdentifier: BookCell.identifier)
         tableView.separatorStyle = .none
         return tableView
@@ -19,7 +20,6 @@ class ListDetailViewController: UIViewController {
     
     private let activityIndicator: UIActivityIndicatorView = {
         let indicator = UIActivityIndicatorView(style: .large)
-        indicator.translatesAutoresizingMaskIntoConstraints = false
         indicator.hidesWhenStopped = true
         return indicator
     }()
@@ -56,18 +56,19 @@ class ListDetailViewController: UIViewController {
         
         self.view.addSubview(tableView)
         self.view.addSubview(activityIndicator)
+        
         tableView.dataSource = self
         tableView.delegate = self
-
-        NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            
-            activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
-        ])
+        
+        tableView.snp.makeConstraints { make in
+            make.top.equalTo(self.view.safeAreaLayoutGuide.snp.top)
+            make.leading.trailing.bottom.equalToSuperview()
+            make.bottom.equalToSuperview()
+        }
+        
+        activityIndicator.snp.makeConstraints { make in
+            make.center.equalTo(self.view)
+        }
     }
     
     private func loadBooks() {
