@@ -1,4 +1,12 @@
+//
+//  BookCell.swift
+//  BookNest
+//
+//  Created by Іван Джулинський on 08.08.2025.
+//
+
 import UIKit
+import SnapKit
 import AlamofireImage
 
 class BookCell: UITableViewCell {
@@ -10,7 +18,6 @@ class BookCell: UITableViewCell {
         stackView.axis = .horizontal
         stackView.alignment = .leading
         stackView.spacing = 16
-        stackView.translatesAutoresizingMaskIntoConstraints = false
         return stackView
     }()
     
@@ -19,7 +26,6 @@ class BookCell: UITableViewCell {
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = 4
-        imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
     
@@ -29,7 +35,6 @@ class BookCell: UITableViewCell {
         stackView.spacing = 4
         stackView.alignment = .leading
         stackView.distribution = .fillEqually
-        stackView.translatesAutoresizingMaskIntoConstraints = false
         return stackView
     }()
     
@@ -37,7 +42,6 @@ class BookCell: UITableViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 14, weight: .semibold)
         label.textColor = .label
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
@@ -45,7 +49,6 @@ class BookCell: UITableViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12, weight: .regular)
         label.textColor = .label
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
@@ -53,7 +56,6 @@ class BookCell: UITableViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12, weight: .regular)
         label.textColor = .secondaryLabel
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
@@ -114,14 +116,15 @@ class BookCell: UITableViewCell {
         textStackView.addArrangedSubview(categoryLabel)
         textStackView.addArrangedSubview(authorLabel)
         
-        NSLayoutConstraint.activate([
-            mainStackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
-            mainStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 24),
-            mainStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -24),
-            mainStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
-            
-            bookImageView.widthAnchor.constraint(equalToConstant: 65),
-            bookImageView.heightAnchor.constraint(equalToConstant: 100)
-        ])
+        mainStackView.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(8)
+            make.trailing.leading.equalToSuperview().inset(24)
+            make.bottom.equalToSuperview().inset(8)
+        }
+        
+        bookImageView.snp.makeConstraints { make in
+            make.width.equalTo(65)
+            make.height.equalTo(100)
+        }
     }
 }
